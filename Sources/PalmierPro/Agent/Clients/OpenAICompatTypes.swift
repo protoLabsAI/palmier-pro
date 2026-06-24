@@ -195,84 +195,111 @@ enum OpenAIRequestBody {
 
 // MARK: - SSE parser (OpenAI chat-completions stream)
 
-enum OpenAISSE {
+/// Synchronous, per-line state machine for the OpenAI chat-completions stream. Split
+/// from the async transport so the index-keyed tool_call accumulation (the easiest
+/// thing to get wrong) is unit-testable with canned SSE lines.
+struct OpenAISSEDecoder {
+    struct Step {
+        var events: [AnthropicStreamEvent] = []
+        var error: String?
+    }
+
     private struct PendingTool {
         var id = ""
         var name = ""
         var args = ""
     }
 
+    private var pending: [Int: PendingTool] = [:]
+    private(set) var stopped = false
+
+    mutating func consume(_ line: String) -> Step {
+        guard line.hasPrefix("data:") else { return Step() }
+        let payload = line.dropFirst("data:".count).trimmingCharacters(in: .whitespaces)
+        if payload == "[DONE]" { return Step() }
+        guard let data = payload.data(using: .utf8),
+              let event = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else { return Step() }
+
+        if let err = event["error"] as? [String: Any], let msg = err["message"] as? String {
+            return Step(error: msg)
+        }
+        guard let choices = event["choices"] as? [[String: Any]],
+              let choice = choices.first else { return Step() }
+
+        var events: [AnthropicStreamEvent] = []
+        if let delta = choice["delta"] as? [String: Any] {
+            if let text = delta["content"] as? String, !text.isEmpty {
+                events.append(.textDelta(text))
+            }
+            if let calls = delta["tool_calls"] as? [[String: Any]] {
+                accumulate(calls)
+            }
+        }
+
+        if let reason = choice["finish_reason"] as? String {
+            let hadTools = reason == "tool_calls" || !pending.isEmpty
+            events.append(contentsOf: flush())
+            let stop: AnthropicStopReason = hadTools ? .toolUse
+                : (reason == "length" ? .maxTokens : .endTurn)
+            events.append(.messageStop(stopReason: stop))
+            stopped = true
+        }
+        return Step(events: events)
+    }
+
+    /// Emit a terminal stop when the stream closed without a finish_reason.
+    mutating func finish() -> [AnthropicStreamEvent] {
+        if stopped { return [] }
+        let hadTools = !pending.isEmpty
+        var events = flush()
+        events.append(.messageStop(stopReason: hadTools ? .toolUse : .endTurn))
+        stopped = true
+        return events
+    }
+
+    private mutating func accumulate(_ calls: [[String: Any]]) {
+        for tc in calls {
+            let index = tc["index"] as? Int ?? 0
+            var acc = pending[index] ?? PendingTool()
+            if let id = tc["id"] as? String, !id.isEmpty { acc.id = id }
+            if let fn = tc["function"] as? [String: Any] {
+                if let name = fn["name"] as? String, !name.isEmpty { acc.name = name }
+                if let args = fn["arguments"] as? String { acc.args += args }
+            }
+            pending[index] = acc
+        }
+    }
+
+    private mutating func flush() -> [AnthropicStreamEvent] {
+        let events = pending.keys.sorted().map { index -> AnthropicStreamEvent in
+            let tool = pending[index]!
+            return .toolUseComplete(
+                id: tool.id,
+                name: tool.name,
+                inputJSON: tool.args.isEmpty ? "{}" : tool.args
+            )
+        }
+        pending.removeAll()
+        return events
+    }
+}
+
+enum OpenAISSE {
     static func parse(
         bytes: URLSession.AsyncBytes,
         continuation: AsyncThrowingStream<AnthropicStreamEvent, Error>.Continuation
     ) async throws {
-        var pending: [Int: PendingTool] = [:]
-        var emittedStop = false
-
+        var decoder = OpenAISSEDecoder()
         for try await line in bytes.lines {
             try Task.checkCancellation()
-            guard line.hasPrefix("data:") else { continue }
-            let payload = line.dropFirst("data:".count).trimmingCharacters(in: .whitespaces)
-            if payload == "[DONE]" { break }
-            guard let data = payload.data(using: .utf8),
-                  let event = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-            else { continue }
-
-            if let err = event["error"] as? [String: Any], let msg = err["message"] as? String {
-                continuation.finish(throwing: OpenAICompatError.streamError(msg))
+            let step = decoder.consume(line)
+            if let error = step.error {
+                continuation.finish(throwing: OpenAICompatError.streamError(error))
                 return
             }
-            guard let choices = event["choices"] as? [[String: Any]],
-                  let choice = choices.first else { continue }
-
-            if let delta = choice["delta"] as? [String: Any] {
-                if let text = delta["content"] as? String, !text.isEmpty {
-                    continuation.yield(.textDelta(text))
-                }
-                if let calls = delta["tool_calls"] as? [[String: Any]] {
-                    for tc in calls {
-                        let index = tc["index"] as? Int ?? 0
-                        var acc = pending[index] ?? PendingTool()
-                        if let id = tc["id"] as? String, !id.isEmpty { acc.id = id }
-                        if let fn = tc["function"] as? [String: Any] {
-                            if let name = fn["name"] as? String, !name.isEmpty { acc.name = name }
-                            if let args = fn["arguments"] as? String { acc.args += args }
-                        }
-                        pending[index] = acc
-                    }
-                }
-            }
-
-            if let reason = choice["finish_reason"] as? String {
-                let hadTools = reason == "tool_calls" || !pending.isEmpty
-                flush(&pending, into: continuation)
-                let stop: AnthropicStopReason = hadTools ? .toolUse
-                    : (reason == "length" ? .maxTokens : .endTurn)
-                continuation.yield(.messageStop(stopReason: stop))
-                emittedStop = true
-            }
+            for event in step.events { continuation.yield(event) }
         }
-
-        // Some gateways close the stream without a finish_reason.
-        if !emittedStop {
-            let hadTools = !pending.isEmpty
-            flush(&pending, into: continuation)
-            continuation.yield(.messageStop(stopReason: hadTools ? .toolUse : .endTurn))
-        }
-    }
-
-    private static func flush(
-        _ pending: inout [Int: PendingTool],
-        into continuation: AsyncThrowingStream<AnthropicStreamEvent, Error>.Continuation
-    ) {
-        for index in pending.keys.sorted() {
-            let tool = pending[index]!
-            continuation.yield(.toolUseComplete(
-                id: tool.id,
-                name: tool.name,
-                inputJSON: tool.args.isEmpty ? "{}" : tool.args
-            ))
-        }
-        pending.removeAll()
+        for event in decoder.finish() { continuation.yield(event) }
     }
 }
