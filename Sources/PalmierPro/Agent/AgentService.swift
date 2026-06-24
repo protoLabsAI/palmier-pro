@@ -7,9 +7,18 @@ final class AgentService {
 
     private var apiKey: String = ""
     private var apiKeyObserver: NSObjectProtocol?
+    private var gatewayObserver: NSObjectProtocol?
+
+    // OpenAI-compatible gateway (a local model server or a LiteLLM gateway). When
+    // configured it is the primary driver. Base URL + model are global (UserDefaults
+    // via GatewayConfig); the optional key lives in the Keychain.
+    private(set) var gatewayBaseURLString: String = ""
+    private(set) var gatewayModel: String = ""
+    private var gatewayKey: String = ""
 
     init() {
         reloadAPIKey()
+        reloadGatewayConfig()
         apiKeyObserver = NotificationCenter.default.addObserver(
             forName: .anthropicAPIKeyChanged,
             object: nil,
@@ -17,6 +26,15 @@ final class AgentService {
         ) { [weak self] _ in
             MainActor.assumeIsolated {
                 self?.reloadAPIKey()
+            }
+        }
+        gatewayObserver = NotificationCenter.default.addObserver(
+            forName: .openAICompatGatewayChanged,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.reloadGatewayConfig()
             }
         }
     }
@@ -30,16 +48,37 @@ final class AgentService {
         }
     }
 
+    private func reloadGatewayConfig() {
+        gatewayBaseURLString = GatewayConfig.baseURLString
+        gatewayModel = GatewayConfig.model
+        Task { [weak self] in
+            let key = await Task.detached(priority: .utility) {
+                GatewayKeychain.load() ?? ""
+            }.value
+            self?.gatewayKey = key
+        }
+    }
+
     isolated deinit {
         if let token = apiKeyObserver {
+            NotificationCenter.default.removeObserver(token)
+        }
+        if let token = gatewayObserver {
             NotificationCenter.default.removeObserver(token)
         }
     }
 
     var hasApiKey: Bool { !apiKey.isEmpty }
 
+    var hasGateway: Bool {
+        let base = gatewayBaseURLString.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !base.isEmpty
+            && URL(string: base) != nil
+            && !gatewayModel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     var canStream: Bool {
-        if hasApiKey { return true }
+        if hasGateway || hasApiKey { return true }
         let account = AccountService.shared
         return account.isSignedIn && account.hasCredits
     }
@@ -50,6 +89,14 @@ final class AgentService {
     }
 
     private func selectClient() -> (any AgentClient)? {
+        if hasGateway,
+           let url = URL(string: gatewayBaseURLString.trimmingCharacters(in: .whitespacesAndNewlines)) {
+            return OpenAICompatClient(
+                baseURL: url,
+                apiKey: gatewayKey,
+                model: gatewayModel.trimmingCharacters(in: .whitespacesAndNewlines)
+            )
+        }
         let chosen = effectiveModel
         if hasApiKey { return AnthropicClient(apiKey: apiKey, model: chosen) }
         if AccountService.shared.isSignedIn {
