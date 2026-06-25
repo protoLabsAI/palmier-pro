@@ -31,7 +31,7 @@ fi
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PLIST="$ROOT/Sources/PalmierPro/Resources/Info.plist"
 APPCAST="$ROOT/appcast.xml"
-DMG="$ROOT/.build/PalmierPro.dmg"
+DMG="$ROOT/.build/protoDirector.dmg"
 cd "$ROOT"
 
 echo "==> Preflight"
@@ -136,7 +136,7 @@ b = os.environ["NEW_BUILD"]
 d = os.environ["PUBDATE"]
 l = os.environ["LENGTH"]
 s = os.environ["SIGNATURE"]
-url = f"https://github.com/protoLabsAI/protoDirector/releases/download/v{v}/PalmierPro.dmg"
+url = f"https://github.com/protoLabsAI/protoDirector/releases/download/v{v}/protoDirector.dmg"
 
 item = f"""        <item>
             <title>Version {v}</title>

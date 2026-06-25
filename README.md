@@ -2,17 +2,13 @@
 
 # protoDirector
 
-**The video editor built for AI.**
+**A local-first AI video editor.**
 
-<a href="https://github.com/protoLabsAI/protoDirector/releases/latest/download/PalmierPro.dmg">
+<a href="https://github.com/protoLabsAI/protoDirector/releases/latest/download/protoDirector.dmg">
   <img src="./assets/macos-badge.png" alt="Download protoDirector for macOS" width="180" />
 </a>
 
 <sub><i>Requires macOS 26 (Tahoe) on Apple Silicon</i></sub>
-
-<a href="https://x.com/Palmier_io"><img src="https://img.shields.io/badge/Follow-%40Palmier__io-000000?style=flat&logo=x&logoColor=white" alt="Follow on X" /></a>
-<a href="https://discord.com/invite/SMVW6pKYmg"><img src="https://img.shields.io/badge/Join-Discord-5865F2?style=flat&logo=discord&logoColor=white" alt="Join Discord" /></a>
-<a href="https://www.ycombinator.com/companies/palmier"><img src="https://img.shields.io/badge/Y%20Combinator-S24-orange" alt="Y Combinator S24" /></a>
 
 <p>
   <strong>English</strong> ·
@@ -88,13 +84,11 @@ We bundle a [mcpb](https://github.com/modelcontextprotocol/mcpb) with the app th
 
 **Is protoDirector fully open source?**
 
-The video editor (without the generative AI features) is fully open source. The MCP server and the agent chat are also open source. The only thing that is closed source is the generative AI processing.
+Yes — the editor, the MCP server, and the in-app agent are all GPLv3. There is no hosted backend; generation runs through whatever OpenAI-compatible endpoint you point it at.
 
 **Is it free?**
 
-The editor is free. You can download it with no login required, and use it as a video editor like CapCut or Adobe Premiere. You can also use the MCP server for free, and start experimenting using Claude Code/Desktop or Cursor to interact with your timeline editor.
-
-Generative AI features require login and subscription.
+Yes. Download it with no login required and use it as a video editor like CapCut or Premiere, and drive it from Claude Code/Desktop or Cursor over MCP. AI chat and image generation use your own key or an OpenAI-compatible gateway you configure — there is no subscription.
 
 **What platforms does it support?**
 
@@ -106,12 +100,9 @@ See [FAQ.md](FAQ.md) for more.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
 
-## Community &amp; Support
+## Support
 
-- **Discord:** Join the community on **[Discord](https://discord.com/invite/SMVW6pKYmg)**.
-- **Twitter / X:** Follow **[@Palmier_io](https://x.com/Palmier_io)** for updates and announcements.
-- **Instagram:** Follow [@palmier.io](https://www.instagram.com/palmier.io) 
-- **Feedback &amp; Support:** Create a [Github Issue](https://github.com/protoLabsAI/protoDirector/issues) or email us at founders@palmier.io
+- **Issues &amp; feedback:** Open a [GitHub Issue](https://github.com/protoLabsAI/protoDirector/issues).
 
 ## Star History
 
@@ -125,6 +116,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## License
 
-Copyright (C) 2026 Palmier, Inc.
+protoDirector is free software under [GPLv3](LICENSE) — a fork of
+[Palmier Pro](https://github.com/palmier-io/palmier-pro).
 
-protoDirector is open source under [GPLv3](LICENSE).
+- Original work: Copyright (C) 2026 Palmier, Inc.
+- Modifications: Copyright (C) 2026 protoLabs
+
+Per GPLv3 the fork stays GPLv3 with full source. See [NOTICE](NOTICE) for
+attribution and [CHANGES.md](CHANGES.md) for the change record. "Palmier" and
+"Palmier Pro" are marks of Palmier, Inc. and are not used to endorse this fork.

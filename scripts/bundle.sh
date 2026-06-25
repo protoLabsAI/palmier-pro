@@ -33,16 +33,18 @@ if [ -f "$ROOT/$ENV_FILE" ]; then
   set +a
 fi
 
-SIGNING_IDENTITY="${SIGNING_IDENTITY:-Developer ID Application: Palmier, Inc. (MMFLRC7562)}"
-NOTARY_PROFILE="${NOTARY_PROFILE:-palmier-notary}"
+# Apple Developer identity — override these for your own account before signing/notarizing.
+# Replace TEAMID with your 10-char Apple Team ID (also in scripts/PalmierPro.entitlements).
+SIGNING_IDENTITY="${SIGNING_IDENTITY:-Developer ID Application: protoLabs (TEAMID)}"
+NOTARY_PROFILE="${NOTARY_PROFILE:-protodirector-notary}"
 SENTRY_DSN="${SENTRY_DSN:-}"
-PROVISION_PROFILE="${PROVISION_PROFILE:-$ROOT/scripts/Palmier_Pro_Developer_ID.provisionprofile}"
+PROVISION_PROFILE="${PROVISION_PROFILE:-$ROOT/scripts/protoDirector_Developer_ID.provisionprofile}"
 ENTITLEMENTS="$ROOT/scripts/PalmierPro.entitlements"
-KEYCHAIN_ACCESS_GROUP="${KEYCHAIN_ACCESS_GROUP:-MMFLRC7562.studio.protolabs.protodirector}"
+KEYCHAIN_ACCESS_GROUP="${KEYCHAIN_ACCESS_GROUP:-TEAMID.studio.protolabs.protodirector}"
 RESOURCES="$ROOT/Sources/PalmierPro/Resources"
-APP="$ROOT/.build/PalmierPro.app"
-ZIP="$ROOT/.build/PalmierPro.zip"
-DMG="$ROOT/.build/PalmierPro.dmg"
+APP="$ROOT/.build/protoDirector.app"
+ZIP="$ROOT/.build/protoDirector.zip"
+DMG="$ROOT/.build/protoDirector.dmg"
 
 echo "==> Building ($CONFIG)"
 swift build -c "$CONFIG"
@@ -120,7 +122,7 @@ if [ "$MODE" = "fast" ]; then
   exit 0
 fi
 
-DSYM="$ROOT/.build/PalmierPro.dSYM"
+DSYM="$ROOT/.build/protoDirector.dSYM"
 echo "==> Generating dSYM"
 rm -rf "$DSYM"
 dsymutil "$APP/Contents/MacOS/PalmierPro" -o "$DSYM"
@@ -201,11 +203,11 @@ rm -f "$ZIP"
 echo "==> Building DMG"
 rm -f "$DMG"
 STAGING="$(mktemp -d)"
-cp -R "$APP" "$STAGING/PalmierPro.app"
+cp -R "$APP" "$STAGING/protoDirector.app"
 ln -s /Applications "$STAGING/Applications"
 cp "$RESOURCES/AppIcon.icns" "$STAGING/.VolumeIcon.icns"
 hdiutil create \
-  -volname "PalmierPro" \
+  -volname "protoDirector" \
   -srcfolder "$STAGING" \
   -ov -format UDZO \
   "$DMG"
