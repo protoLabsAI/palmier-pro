@@ -1,0 +1,14 @@
+protoDirector
+Copyright (C) 2026 protoLabs
+
+This product is a fork of Palmier Pro.
+Palmier Pro — Copyright (C) 2026 Palmier, Inc.
+Upstream: https://github.com/palmier-io/palmier-pro
+
+protoDirector is free software licensed under the GNU General Public License,
+version 3 (see LICENSE). It contains modifications by protoLabs; CHANGES.md
+summarizes the changes made relative to the upstream Palmier Pro release.
+
+"Palmier" and "Palmier Pro" are names/marks of Palmier, Inc. They are retained
+above solely for the attribution and change-notice requirements of the GPLv3 and
+do not imply any endorsement of protoDirector by Palmier, Inc.

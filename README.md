@@ -1,18 +1,14 @@
 <div align="center">
 
-# Palmier Pro
+# protoDirector
 
-**The video editor built for AI.**
+**A local-first AI video editor.**
 
-<a href="https://github.com/palmier-io/palmier-pro/releases/latest/download/PalmierPro.dmg">
-  <img src="./assets/macos-badge.png" alt="Download Palmier Pro for macOS" width="180" />
+<a href="https://github.com/protoLabsAI/protoDirector/releases/latest/download/protoDirector.dmg">
+  <img src="./assets/macos-badge.png" alt="Download protoDirector for macOS" width="180" />
 </a>
 
 <sub><i>Requires macOS 26 (Tahoe) on Apple Silicon</i></sub>
-
-<a href="https://x.com/Palmier_io"><img src="https://img.shields.io/badge/Follow-%40Palmier__io-000000?style=flat&logo=x&logoColor=white" alt="Follow on X" /></a>
-<a href="https://discord.com/invite/SMVW6pKYmg"><img src="https://img.shields.io/badge/Join-Discord-5865F2?style=flat&logo=discord&logoColor=white" alt="Join Discord" /></a>
-<a href="https://www.ycombinator.com/companies/palmier"><img src="https://img.shields.io/badge/Y%20Combinator-S24-orange" alt="Y Combinator S24" /></a>
 
 <p>
   <strong>English</strong> ·
@@ -33,15 +29,15 @@
 
 </div>
 
-<img src="./assets/palmier-ui.png" alt="Palmier Pro UI" width="900" />
+<img src="./assets/palmier-ui.png" alt="protoDirector UI" width="900" />
 
 ---
 
-Palmier Pro is an open source video editor for Mac. You and your agent can generate and edit videos together inside the timeline.
+protoDirector is an open source video editor for Mac. You and your agent can generate and edit videos together inside the timeline.
 
 ### Swift-native video editor
 
-We built Palmier Pro from scratch with Swift. The north star is Premiere Pro, with our take on integrating AI into the workflow.
+We built protoDirector from scratch with Swift. The north star is Premiere Pro, with our take on integrating AI into the workflow.
 
 ### Built-in Generative AI
 
@@ -57,12 +53,12 @@ When the app is open, it exposes an MCP server at `http://127.0.0.1:19789/mcp` v
 
 **Claude Code**
 ```bash
-claude mcp add --transport http palmier-pro http://127.0.0.1:19789/mcp
+claude mcp add --transport http protodirector http://127.0.0.1:19789/mcp
 ```
 
 **Codex**
 ```bash
-codex mcp add palmier-pro --url http://127.0.0.1:19789/mcp
+codex mcp add protodirector --url http://127.0.0.1:19789/mcp
 ```
 
 **Cursor**
@@ -72,7 +68,7 @@ The easiest way is go inside the app `Help` -> `MCP Instructions` -> `Install in
 ```
 {
   "mcpServers": {
-    "palmier-pro": {
+    "protodirector": {
       "type": "http",
       "url": "http://127.0.0.1:19789/mcp"
     }
@@ -86,15 +82,13 @@ We bundle a [mcpb](https://github.com/modelcontextprotocol/mcpb) with the app th
 
 ## FAQ
 
-**Is Palmier Pro fully open source?**
+**Is protoDirector fully open source?**
 
-The video editor (without the generative AI features) is fully open source. The MCP server and the agent chat are also open source. The only thing that is closed source is the generative AI processing.
+Yes — the editor, the MCP server, and the in-app agent are all GPLv3. There is no hosted backend; generation runs through whatever OpenAI-compatible endpoint you point it at.
 
 **Is it free?**
 
-The editor is free. You can download it with no login required, and use it as a video editor like CapCut or Adobe Premiere. You can also use the MCP server for free, and start experimenting using Claude Code/Desktop or Cursor to interact with your timeline editor.
-
-Generative AI features require login and subscription.
+Yes. Download it with no login required and use it as a video editor like CapCut or Premiere, and drive it from Claude Code/Desktop or Cursor over MCP. AI chat and image generation use your own key or an OpenAI-compatible gateway you configure — there is no subscription.
 
 **What platforms does it support?**
 
@@ -106,25 +100,28 @@ See [FAQ.md](FAQ.md) for more.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
 
-## Community &amp; Support
+## Support
 
-- **Discord:** Join the community on **[Discord](https://discord.com/invite/SMVW6pKYmg)**.
-- **Twitter / X:** Follow **[@Palmier_io](https://x.com/Palmier_io)** for updates and announcements.
-- **Instagram:** Follow [@palmier.io](https://www.instagram.com/palmier.io) 
-- **Feedback &amp; Support:** Create a [Github Issue](https://github.com/palmier-io/palmier-pro/issues) or email us at founders@palmier.io
+- **Issues &amp; feedback:** Open a [GitHub Issue](https://github.com/protoLabsAI/protoDirector/issues).
 
 ## Star History
 
-<a href="https://www.star-history.com/?type=date&repos=palmier-io%2Fpalmier-pro">
+<a href="https://www.star-history.com/?type=date&repos=protoLabsAI%2Fprotodirector">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=palmier-io/palmier-pro&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=palmier-io/palmier-pro&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=palmier-io/palmier-pro&type=date&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=protoLabsAI/protoDirector&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=protoLabsAI/protoDirector&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=protoLabsAI/protoDirector&type=date&legend=top-left" />
  </picture>
 </a>
 
 ## License
 
-Copyright (C) 2026 Palmier, Inc.
+protoDirector is free software under [GPLv3](LICENSE) — a fork of
+[Palmier Pro](https://github.com/palmier-io/palmier-pro).
 
-Palmier Pro is open source under [GPLv3](LICENSE).
+- Original work: Copyright (C) 2026 Palmier, Inc.
+- Modifications: Copyright (C) 2026 protoLabs
+
+Per GPLv3 the fork stays GPLv3 with full source. See [NOTICE](NOTICE) for
+attribution and [CHANGES.md](CHANGES.md) for the change record. "Palmier" and
+"Palmier Pro" are marks of Palmier, Inc. and are not used to endorse this fork.
