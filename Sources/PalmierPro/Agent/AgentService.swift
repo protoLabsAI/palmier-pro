@@ -51,12 +51,10 @@ final class AgentService {
     private func reloadGatewayConfig() {
         gatewayBaseURLString = GatewayConfig.baseURLString
         gatewayModel = GatewayConfig.model
-        Task { [weak self] in
-            let key = await Task.detached(priority: .utility) {
-                GatewayKeychain.load() ?? ""
-            }.value
-            self?.gatewayKey = key
-        }
+        // Synchronous Keychain read (fast SecItemCopyMatching) so hasGateway reflects the
+        // key immediately — otherwise the first stream after launch/config-change races an
+        // empty bearer and 401s on the key-requiring default gateway.
+        gatewayKey = GatewayKeychain.load() ?? ""
     }
 
     isolated deinit {
@@ -72,9 +70,16 @@ final class AgentService {
 
     var hasGateway: Bool {
         let base = gatewayBaseURLString.trimmingCharacters(in: .whitespacesAndNewlines)
-        return !base.isEmpty
-            && URL(string: base) != nil
-            && !gatewayModel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        guard !base.isEmpty, let url = URL(string: base),
+              !gatewayModel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
+        // A remote gateway activates only once a key is set, so the pre-filled default
+        // can't be turned on by an accidental Save; loopback (local) gateways need no key.
+        return !gatewayKey.isEmpty || Self.isGatewayLoopback(url)
+    }
+
+    static func isGatewayLoopback(_ url: URL) -> Bool {
+        let host = url.host?.lowercased()
+        return host == "localhost" || host == "127.0.0.1" || host == "::1"
     }
 
     var canStream: Bool {

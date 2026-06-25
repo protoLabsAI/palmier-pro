@@ -12,7 +12,13 @@ struct OpenAICompatGenerationClient: Sendable {
     @MainActor
     static var gatewayConfigured: Bool {
         let raw = GatewayConfig.baseURLString.trimmingCharacters(in: .whitespacesAndNewlines)
-        return !raw.isEmpty && URL(string: raw) != nil
+        guard !raw.isEmpty, let url = URL(string: raw) else { return false }
+        // Mirror AgentService.hasGateway: a remote gateway activates only once a key is set,
+        // so the pre-filled default can't be turned on by an accidental Save; loopback (local)
+        // gateways need no key.
+        if !(GatewayKeychain.load() ?? "").isEmpty { return true }
+        let host = url.host?.lowercased()
+        return host == "localhost" || host == "127.0.0.1" || host == "::1"
     }
 
     /// Build from the configured agent gateway, or nil if it isn't set.
